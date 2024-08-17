@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 14:35:51 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/17 21:29:27 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/17 23:21:23 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,35 +46,44 @@ char	*find_path(char *cmd, char **envp)
 //calls find_path which finds the path to an executable file 
 //for the bash cmd inside the environmental pointer
 //replaces current process with the bash command using execve
-void	ft_exec(char *arg, char **envp)
+void	ft_exec(char *arg, t_data *data)
 {
 	char	**cmd;
 	int		i;
 	char	*path;
 
 	cmd = split_pipex(arg);
-	path = find_path(cmd[0], envp);
+	path = find_path(cmd[0], data->envp);
 	i = -1;
 	if (!path)
 	{
 		while (cmd[++i])
 			free(cmd[i]);
 		free(cmd);
-		perror("Error ??");
-		exit(EXIT_FAILURE);
+		ft_error(cmd[0], ": command not found", data);
 	}
-	if (execve(path, cmd, envp) == -1)
-		perror("error execve");
-	exit(EXIT_FAILURE);
+	if (execve(path, cmd, data->envp) == -1)
+		ft_error("Execve: ", strerror(errno), data);
+}
+
+void dup_in_out(int input, int output, t_data *data)
+{
+	if (dup2(input, STDIN_FILENO) == -1)
+		ft_error("dup2", strerror(errno), data);
+	if (dup2(output, STDOUT_FILENO) == -1)
+		ft_error("dup2", strerror(errno), data);
 }
 
 //opens infile
 //infile is duplicated to STDIN
 //write end of pipe is duplicated to STDOUT
 //calls ft_exec function for cmd1
-void	child_process(t_data *data, char **argv, char **envp, int *pipe_fd)
+void	child_process(t_data *data, int child_nb)
 {
-	close(pipe_fd[0]);
+	if (child_nb == 0)
+		dup_in_out(data->infile, data->pipes[1], data);
+	else if (child_nb == data->nb_cmds - 1)
+		
 	dup2(data->infile, STDIN_FILENO);
 	dup2(pipe_fd[1], STDOUT_FILENO);
 	close(data->infile);
@@ -87,7 +96,7 @@ void	child_process(t_data *data, char **argv, char **envp, int *pipe_fd)
 //read end of pipe is duplicated as STDIN
 //outfile is duplicated as STDOUT
 //calls ft_exec function for cmd2
-void	parent_process(char **argv, char **envp, int *pipe_fd)
+void	parent_process(t_data *data)
 {
 	int	outfile;
 
@@ -112,11 +121,11 @@ void	check_args(int ac, char **av)
 	if (ac < 5 || (ac < 6 && ft_strncmp(av[1], "here_doc", 9) == 0))
 	{
 		if (ac >= 2 && ft_strncmp(av[1], "here_doc", 9) == 0)
-			error_msg("Not enough args, follow format:\n", 
-				"./pipex here_doc LIMITER cmd1 cmd2 ... cmdn file2");
+			ft_error("Not enough args, follow format:\n", 
+				"./pipex here_doc LIMITER cmd1 cmd2 ... cmdn file2", NULL);
 		else
-			error_msg("Not enough args. Follow format:\n", 
-				"./pipex file1 cmd1 cmd2 ... cmdn file2");
+			ft_error("Not enough args. Follow format:\n", 
+				"./pipex file1 cmd1 cmd2 ... cmdn file2", NULL);
 	}
 }
 
@@ -126,21 +135,26 @@ void	check_args(int ac, char **av)
 //doesn't terminate before child process finishes
 int	main(int ac, char **av, char **envp)
 {
-	t_data	data;
+	t_data	*data;
 	int		pipe_fd[2];
 	pid_t	pid;
+	int		child_nb;
 
 	check_args(ac, av);
 	data = init_data(ac, av, envp);
 	pid = fork();
-	if (pid == -1)
-		perror("ERROR forking");
-	else if (pid == 0)
-		child_process(&data, av, envp, pipe_fd);
-	else
+	child_nb = 0;
+	while (child_nb < data->ac)
 	{
-		parent_process(av, envp, pipe_fd);
-		waitpid(pid, NULL, 0);
+		data->pids[child_nb] = fork();
+		if (data->pids[child_nb] == -1)
+			ft_error("Fork: ", strerror(errno), data);
+		if (data->pids[child_nb] == 0)
+			child(data, child_nb);
+		child_nb++;
 	}
+	if (data->here_doc == 1)
+		    unlink(".here_doc");
+	parent(data);
 	return (0);
 }     

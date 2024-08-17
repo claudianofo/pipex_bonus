@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 19:45:10 by claudia           #+#    #+#             */
-/*   Updated: 2024/08/17 21:30:28 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/17 22:47:23 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ void	here_doc(t_data *data)
 
 	data->infile = open(".here_doc", O_RDWR | O_CREAT | O_TRUNC, 0644);
 		if (data->infile == -1)
-			error_msg("Unable to create here_doc temp file:", strerror(errno));
+			ft_error("Unable to create here_doc temp file:", strerror(errno), data);
 		while (1)
 		{ 
 			ft_putstr_fd(">", STDOUT_FILENO);
@@ -41,9 +41,19 @@ void	set_infile(t_data *data)
 	{
 		data->infile = open(data->av[1], O_RDONLY);
 		if (data->infile == -1)
-			error_msg("Unable to open infile:", strerror(errno));
+			ft_error("Unable to open infile:", strerror(errno), data);
 	}
 }
+
+void	set_outfile(t_data *d)
+{
+	if (d->here_doc == 1)
+		d->outfile = open(d->av[d->ac - 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+	else
+		d->outfile = open(d->av[d->ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (d->outfile == -1)
+		ft_error("Unable to open outfile", strerror(errno), d);
+}	
 
 void	create_pipes(t_data *data)
 {
@@ -51,23 +61,17 @@ void	create_pipes(t_data *data)
 
 	data->pipes = malloc(sizeof(int) * 2 * (data->nb_cmds - 1));
 	if (!data->pipes)
-	{
-		clear_resources(data);
-		error_msg("Malloc error while allocating pipes:", strerror(errno));
-	}
+		ft_error("Malloc error while allocating pipes:", strerror(errno), NULL);
 	i = 0;
 	while (i < data->nb_cmds)
 	{
 		if (pipe(&data->pipes[i * 2]) == -1)
-		{
-			clear_resources(data);
-			error_msg("Unable to create pipes:", strerror(errno));
-		}
+			ft_error("Unable to create pipes:", strerror(errno), data);
 		i++;
 	}
 }
 
-t_data	init_data(int ac, char **av, char **envp)
+t_data	*init_data(int ac, char **av, char **envp)
 {
 	t_data	data;
 
@@ -79,7 +83,11 @@ t_data	init_data(int ac, char **av, char **envp)
 	else
 		data.here_doc = 0;                                  
 	set_infile(&data);
+	set_outfile(&data);
 	data.nb_cmds = ac - 3 - data.here_doc;
 	create_pipes(&data);
-	return (data);
+	data.pids = malloc(sizeof(int) * (data.nb_cmds - 1));
+	if (!data.pids)
+		ft_error("Malloc error while allocating pids", strerror(errno), &data);
+	return (&data);
 }

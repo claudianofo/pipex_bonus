@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 20:54:08 by claudia           #+#    #+#             */
-/*   Updated: 2024/08/17 21:20:04 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/17 22:54:15 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,12 +31,16 @@ void    clear_resources(t_data *data)
     {
         if (data->infile != -1)
             close(data->infile);
-        if (data->pipes != NULL)
+        if (data->outfile != -1)
+            close(data->outfile);
+        if (data->pipes)
         {
             close_pipes(data);
             free(data->pipes);
         }
         if (data->here_doc == 1)
 		    unlink(".here_doc");
+        if (data->pids)
+            free(data->pids);
     }
 }
