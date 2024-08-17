@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 14:35:51 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/13 19:47:23 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/17 21:29:27 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void	ft_exec(char *arg, char **envp)
 		while (cmd[++i])
 			free(cmd[i]);
 		free(cmd);
-		perror("Error");
+		perror("Error ??");
 		exit(EXIT_FAILURE);
 	}
 	if (execve(path, cmd, envp) == -1)
@@ -107,18 +107,17 @@ void	parent_process(char **argv, char **envp, int *pipe_fd)
 
 //checks if enough args were passed
 //returns 1 if not enough args
-int	check_args(int ac, char **av)
+void	check_args(int ac, char **av)
 {
 	if (ac < 5 || (ac < 6 && ft_strncmp(av[1], "here_doc", 9) == 0))
 	{
 		if (ac >= 2 && ft_strncmp(av[1], "here_doc", 9) == 0)
-			return(error_msg("Not enough args, follow format:\n", 
-				"./pipex here_doc LIMITER cmd1 cmd2 ... cmdn file2"));
+			error_msg("Not enough args, follow format:\n", 
+				"./pipex here_doc LIMITER cmd1 cmd2 ... cmdn file2");
 		else
-			return(error_msg("Not enough args. Follow format:\n", 
-				"./pipex file1 cmd1 cmd2 ... cmdn file2\nor"));
+			error_msg("Not enough args. Follow format:\n", 
+				"./pipex file1 cmd1 cmd2 ... cmdn file2");
 	}
-	return (0);
 }
 
 //checks for correct no. of arguments
@@ -131,14 +130,8 @@ int	main(int ac, char **av, char **envp)
 	int		pipe_fd[2];
 	pid_t	pid;
 
-	if (check_args(ac, av) == 1)
-		return (1);
+	check_args(ac, av);
 	data = init_data(ac, av, envp);
-	if (pipe(pipe_fd) == -1)
-	{
-		perror("ERROR creating pipe");
-		exit(EXIT_FAILURE);
-	}
 	pid = fork();
 	if (pid == -1)
 		perror("ERROR forking");

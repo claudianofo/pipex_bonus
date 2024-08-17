@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 17:45:15 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/13 20:02:31 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/17 21:22:54 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ typedef struct   s_data
     int     ac;
     char    **av;
     char    **envp;
-    int     *pipes[2];
+    int     *pipes;
     int     nb_cmds;
     int     here_doc;
     int     infile;
@@ -49,6 +49,7 @@ t_data	init_data(int ac, char **av, char **envp);
 void	free_array(char **array);
 char	**ft_rm_quotes(char **cmd);
 char	**split_pipex(char const *s);
-int	    error_msg(char *str1, char *str2);
+void    error_msg(char *str1, char *str2);
+void    clear_resources(t_data *data);
 
 #endif

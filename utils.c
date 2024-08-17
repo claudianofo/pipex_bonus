@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/17 16:17:53 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/08 20:33:46 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/16 23:20:33 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,10 +41,10 @@ char	**ft_rm_quotes(char **cmd)
 	return (cmd);
 }
 
-int	error_msg(char *str1, char *str2)
+void	error_msg(char *str1, char *str2)
 {
 	ft_putstr_fd("Error: ", 2);
 	ft_putstr_fd(str1, 2);
 	ft_putendl_fd(str2, 2);
-	return (1);
+	exit (1);
 }

@@ -1,5 +1,5 @@
 NAME = pipex
-SOURCES = pipex.c init.c utils.c split_pipex.c get_next_line.c
+SOURCES = pipex.c init.c utils.c split_pipex.c get_next_line.c cleanup.c
 
 OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 CFLAGS = -Wall -Werror -Wextra -g3 -Ilibft
