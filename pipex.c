@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 14:35:51 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/17 23:21:23 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 19:09:33 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,8 @@ void	ft_exec(char *arg, t_data *data)
 		ft_error("Execve: ", strerror(errno), data);
 }
 
+//duplicates specified input and output to STDIN snd STDOUT FILENOs
+//called by each child process
 void dup_in_out(int input, int output, t_data *data)
 {
 	if (dup2(input, STDIN_FILENO) == -1)
@@ -74,87 +76,59 @@ void dup_in_out(int input, int output, t_data *data)
 		ft_error("dup2", strerror(errno), data);
 }
 
-//opens infile
-//infile is duplicated to STDIN
-//write end of pipe is duplicated to STDOUT
-//calls ft_exec function for cmd1
-void	child_process(t_data *data, int child_nb)
+/*
+sets input and output depending on if its the first, last or middle child
+if middle or last child, waits for the child processes before it to finish
+executes command
+*/
+void	child_process(t_data *d, int child_nb)
 {
 	if (child_nb == 0)
-		dup_in_out(data->infile, data->pipes[1], data);
-	else if (child_nb == data->nb_cmds - 1)
-		
-	dup2(data->infile, STDIN_FILENO);
-	dup2(pipe_fd[1], STDOUT_FILENO);
-	close(data->infile);
-	close(pipe_fd[1]);
-	ft_exec(argv[2], envp);
+		dup_in_out(d->infile, d->pipes[1], d);
+	else if (child_nb == d->nb_cmds - 1)
+		dup_in_out(d->pipes[2 * child_nb - 2], d->outfile, d);
+	else
+		dup_in_out(d->pipes[2 * child_nb - 2], d->pipes[2 * child_nb + 1], d);
+	close(d->infile);
+	close(d->outfile);
+	close_pipes(d);
+	if (child_nb > 0)
+		waitpid(d->pids[child_nb - 1], NULL, 0);
+	ft_exec(d->av[child_nb + 2 + d->here_doc], d);
 }
 
-//opens or creates outfile if it doesn't exits
-//0644 is the default permissions of files created by bash
-//read end of pipe is duplicated as STDIN
-//outfile is duplicated as STDOUT
-//calls ft_exec function for cmd2
-void	parent_process(t_data *data)
+//waits for last child process to finish, and returns it's exit status
+int	parent_process(t_data *data, int last_child)
 {
-	int	outfile;
+	int	wstatus;
 
-	close(pipe_fd[1]);
-	outfile = open(argv[4], O_RDWR | O_CREAT | O_TRUNC, 0644); //TODO: add condition for here_doc
-	if (outfile == -1)
-	{
-		perror("ERROR opening outfile");
-		exit(EXIT_FAILURE);
-	}
-	dup2(pipe_fd[0], STDIN_FILENO);
-	dup2(outfile, STDOUT_FILENO);
-	close(outfile);
-	close(pipe_fd[0]);
-	ft_exec(argv[3], envp);
+	waitpid(data->pids[last_child], &wstatus, 0);
+	clear_resources(data);
+	if (WIFEXITED(wstatus))
+		return (WEXITSTATUS(wstatus));
+	return (1);
 }
 
-//checks if enough args were passed
-//returns 1 if not enough args
-void	check_args(int ac, char **av)
-{
-	if (ac < 5 || (ac < 6 && ft_strncmp(av[1], "here_doc", 9) == 0))
-	{
-		if (ac >= 2 && ft_strncmp(av[1], "here_doc", 9) == 0)
-			ft_error("Not enough args, follow format:\n", 
-				"./pipex here_doc LIMITER cmd1 cmd2 ... cmdn file2", NULL);
-		else
-			ft_error("Not enough args. Follow format:\n", 
-				"./pipex file1 cmd1 cmd2 ... cmdn file2", NULL);
-	}
-}
-
-//checks for correct no. of arguments
-//forks into 2 processes
-//waitpid is called to ensure that parent process 
-//doesn't terminate before child process finishes
+//check for correct argument format
+//initialise data (pipes, infile or heredoc, outfile and allocates for pids)
+//fork into multiple processes to execute commands; one child per command
+//clear any resources in parent process and return exit status of last child
 int	main(int ac, char **av, char **envp)
 {
-	t_data	*data;
-	int		pipe_fd[2];
-	pid_t	pid;
+	t_data	data;
 	int		child_nb;
 
 	check_args(ac, av);
 	data = init_data(ac, av, envp);
-	pid = fork();
 	child_nb = 0;
-	while (child_nb < data->ac)
+	while (child_nb < data.nb_cmds)
 	{
-		data->pids[child_nb] = fork();
-		if (data->pids[child_nb] == -1)
-			ft_error("Fork: ", strerror(errno), data);
-		if (data->pids[child_nb] == 0)
-			child(data, child_nb);
+		data.pids[child_nb] = fork();
+		if (data.pids[child_nb] == -1)
+			ft_error("Fork: ", strerror(errno), &data);
+		if (data.pids[child_nb] == 0)
+			child_process(&data, child_nb);
 		child_nb++;
 	}
-	if (data->here_doc == 1)
-		    unlink(".here_doc");
-	parent(data);
-	return (0);
+	return (parent_process(&data, child_nb - 1));
 }     

@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 19:45:10 by claudia           #+#    #+#             */
-/*   Updated: 2024/08/17 22:47:23 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 15:08:57 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,32 +17,34 @@ void	here_doc(t_data *data)
 	char	*line;
 
 	data->infile = open(".here_doc", O_RDWR | O_CREAT | O_TRUNC, 0644);
-		if (data->infile == -1)
-			ft_error("Unable to create here_doc temp file:", strerror(errno), data);
-		while (1)
-		{ 
-			ft_putstr_fd(">", STDOUT_FILENO);
-			line = get_next_line(STDIN_FILENO);
-			if (line == NULL)
-				break;
-			if (ft_strlen(data->av[2]) + 1 == ft_strlen(line) 
-				&& !ft_strncmp(line, data->av[2], ft_strlen(data->av[2] + 1)))
-				break;
-			ft_putstr_fd(line, data->infile);
-			free(line);
-		}
+	if (data->infile == -1)
+		ft_error("Unable to create here_doc temp file:", strerror(errno), data);
+	while (1)
+	{ 
+		ft_putstr_fd("> ", STDOUT_FILENO);
+		line = get_next_line(STDIN_FILENO);
+		if (line == NULL)
+			break;
+		if (ft_strlen(data->av[2]) + 1 == ft_strlen(line) 
+			&& !ft_strncmp(line, data->av[2], ft_strlen(data->av[2] + 1)))
+			break;
+		ft_putstr_fd(line, data->infile);
+		free(line);
+	}
+	close(data->infile);
 }
 
 void	set_infile(t_data *data)
 {
 	if (data->here_doc == 1)
+	{	
 		here_doc(data);
-	else
-	{
-		data->infile = open(data->av[1], O_RDONLY);
-		if (data->infile == -1)
-			ft_error("Unable to open infile:", strerror(errno), data);
+		data->infile = open(".here_doc", O_RDONLY);
 	}
+	else
+		data->infile = open(data->av[1], O_RDONLY);
+	if (data->infile == -1)
+			ft_error("Unable to open infile:", strerror(errno), data);
 }
 
 void	set_outfile(t_data *d)
@@ -71,7 +73,7 @@ void	create_pipes(t_data *data)
 	}
 }
 
-t_data	*init_data(int ac, char **av, char **envp)
+t_data	init_data(int ac, char **av, char **envp)
 {
 	t_data	data;
 
@@ -86,8 +88,8 @@ t_data	*init_data(int ac, char **av, char **envp)
 	set_outfile(&data);
 	data.nb_cmds = ac - 3 - data.here_doc;
 	create_pipes(&data);
-	data.pids = malloc(sizeof(int) * (data.nb_cmds - 1));
+	data.pids = malloc(sizeof(int) * (data.nb_cmds));
 	if (!data.pids)
 		ft_error("Malloc error while allocating pids", strerror(errno), &data);
-	return (&data);
+	return (data);
 }

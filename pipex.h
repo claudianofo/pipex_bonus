@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 17:45:15 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/17 22:47:34 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 19:00:14 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,13 @@ typedef struct   s_data
 }               t_data;
 
 char	*get_next_line(int fd);
-t_data	*init_data(int ac, char **av, char **envp);
+t_data	init_data(int ac, char **av, char **envp);
 void	free_array(char **array);
 char	**ft_rm_quotes(char **cmd);
 char	**split_pipex(char const *s);
 void	ft_error(char *str1, char *str2, t_data *data);
 void    clear_resources(t_data *data);
+void    close_pipes(t_data *data);
+void	check_args(int ac, char **av);
 
 #endif
