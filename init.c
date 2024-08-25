@@ -6,13 +6,15 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 19:45:10 by claudia           #+#    #+#             */
-/*   Updated: 2024/08/25 15:08:57 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 20:30:30 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	here_doc(t_data *data)
+//Creates temporary .here_doc file and takes user input from STDIN using 
+//get_next_line(). Checks each line of input for LIMITER set by user.
+static void	here_doc(t_data *data)
 {
 	char	*line;
 
@@ -34,7 +36,10 @@ void	here_doc(t_data *data)
 	close(data->infile);
 }
 
-void	set_infile(t_data *data)
+//Infile is opened in read only mode
+//if here_doc flag is true, calls here_doc() to write user input to
+//temp .here_doc file
+static void	set_infile(t_data *data)
 {
 	if (data->here_doc == 1)
 	{	
@@ -47,7 +52,9 @@ void	set_infile(t_data *data)
 			ft_error("Unable to open infile:", strerror(errno), data);
 }
 
-void	set_outfile(t_data *d)
+//Opens outfile file in truncated mode (overwrites file contents if it already exists)
+//Or in append mode if here_doc flag is true
+static void	set_outfile(t_data *d)
 {
 	if (d->here_doc == 1)
 		d->outfile = open(d->av[d->ac - 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -57,7 +64,8 @@ void	set_outfile(t_data *d)
 		ft_error("Unable to open outfile", strerror(errno), d);
 }	
 
-void	create_pipes(t_data *data)
+//Allocates memory for pipes and creates them with pipe()
+static void	create_pipes(t_data *data)
 {
 	int	i;
 
@@ -73,6 +81,13 @@ void	create_pipes(t_data *data)
 	}
 }
 
+/*
+Creates and returns a data struct
+Allocates memory for pipes and pids. Pipes are created.
+Opens infile and outfile
+Checks for here_doc and sets here_doc flag if true,
+and creates temporary file for here_doc and takes user input
+*/
 t_data	init_data(int ac, char **av, char **envp)
 {
 	t_data	data;

@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/04/28 15:25:46 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/12 21:22:01 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 20:54:12 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ static int	check_line_end(char *s)
 
 //reads from fd to buff
 //static variable (hold_str) becomes a duplicate
-//of buff if emtpy, else it is concatonated with buff
+//of buff if empty, else it is concatonated with buff
 static char	*read_to_buff(int fd, char *hold_str)
 {
 	int			readbyte;
@@ -89,18 +89,6 @@ static char	*read_to_buff(int fd, char *hold_str)
 	return (hold_str);
 }
 
-//hold_str is passed in as a double pointer
-//so that the memory at hold_str can be successfully
-//freed and set to null. The double pointer avoids creating
-//a dangling pointer, which is when a pointer is pointing at
-//unallocated memory. This happens because when you pass a single 
-//pointer into a function, it will exist at a separate memory address 
-//to the original pointer from the original function, however they 
-//store the same value. You can free
-//the memory from the pointer copy, but you can't set the original
-//pointer to null. To get around this, the double pointer allows you
-//to access the original memory location by passing in a pointer
-//to the original hold_str pointer. 
 static void	*free_hold_str(char **hold_str)
 {
 	free(*hold_str);
@@ -108,15 +96,15 @@ static void	*free_hold_str(char **hold_str)
 	return (NULL);
 }
 
-//calls read_to_buff then check_line_end, which returns
-//-1 for empty str, -2 for no nl, or the index of the first nl.
-//if there is no nl(indicating EOF) in hold_str, GNL duplicates 
-//hold_str (out), frees hold str then returns out. 
-//It creates a duplicate so that the static variable can be 
-//cleared so it doesn't interfere if GNL is called again.
-//If there is a nl, out becomes a copy of hold_str up until nl
-//then hold_str becomes a copy of everything it contained
-//after the nl.
+/*
+Returns one line of fd at a time as a string, or NULL if there is nothing
+left to read or an error occured. Will return subsequent lines on subsequent calls.
+Function can be compiled with "-D BUFFER_SIZE=n" flag to modify size of buffer
+for read(). If flag isn't used, default is set as 5.
+Note: buffer size can change the efficiency of the funciton, depending on
+the relative size of the line. Small lines are processed more efficiently with small
+buffer size and larger buffer size is more efficient for large lines.
+*/
 char	*get_next_line(int fd)
 {
 	static char	*hold_str = NULL;
@@ -144,20 +132,3 @@ char	*get_next_line(int fd)
 	hold_str = tmp_str;
 	return (out);
 }
-/*
-int	main(void)
-{
-	int	fd;
-	setbuf(stdout, NULL);
-	fd = open("1char.txt", O_RDONLY);
-	printf("GNL1:%s", get_next_line(fd));
-	printf("GNL2:%s", get_next_line(fd));
-	printf("GNL3:%s", get_next_line(fd));
-	printf("GNL4:%s", get_next_line(fd));
-	printf("GNL5:%s", get_next_line(fd));
-	printf("GNL6:%s", get_next_line(fd));
-	printf("GNL7:%s", get_next_line(fd));
-	printf("GNL8:%s", get_next_line(fd));
-	close(fd);
-	return (0);
-}*/

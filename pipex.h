@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 17:45:15 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/25 19:00:14 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 20:09:09 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,5 +53,6 @@ void	ft_error(char *str1, char *str2, t_data *data);
 void    clear_resources(t_data *data);
 void    close_pipes(t_data *data);
 void	check_args(int ac, char **av);
+void    dup_in_out(int input, int output, t_data *data);
 
 #endif

@@ -6,13 +6,13 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/17 20:54:08 by claudia           #+#    #+#             */
-/*   Updated: 2024/08/25 19:05:23 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 21:10:35 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-//closes all pipe file descriptors stored in data
+//Closes all pipe file descriptors stored in data
 void    close_pipes(t_data *data)
 {
     int i;
@@ -26,8 +26,8 @@ void    close_pipes(t_data *data)
     }
 }
 
-//clears any resources in use in data
-//allocated memory, infile, outfile, pipes, .here_doc
+//Clears any resources in use in data struct:
+//de-allocates memory, closes infile, outfile and pipes, deletes .here_doc
 void    clear_resources(t_data *data)
 {
     if (data)
@@ -48,11 +48,12 @@ void    clear_resources(t_data *data)
     }
 }
 
-//clears any resources currently in use, prints error message and exits program
+//Clears any resources currently in use, prints error message and exits program
 void	ft_error(char *str1, char *str2, t_data *data)
 {	
 	clear_resources(data);
 	ft_putstr_fd("Error: ", 2);
+    printf("hello\n");
 	ft_putstr_fd(str1, 2);
 	ft_putendl_fd(str2, 2);
 	exit (1);

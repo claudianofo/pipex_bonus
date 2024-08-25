@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 14:35:51 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/25 19:09:33 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 21:52:25 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,35 +51,29 @@ void	ft_exec(char *arg, t_data *data)
 	char	**cmd;
 	int		i;
 	char	*path;
+	char	*tmp_cmd;
 
+	//printf("arg = %s\n", arg);
 	cmd = split_pipex(arg);
+	//printf("cmd[0] = %s\n", cmd[0]);//WHAT IS GOING ON WITH THE OUTPUTS????
 	path = find_path(cmd[0], data->envp);
-	i = -1;
+	i = 0;
 	if (!path)
 	{
-		while (cmd[++i])
-			free(cmd[i]);
+		tmp_cmd = cmd[0];
+		while (cmd[i])
+			free(cmd[i++]);
 		free(cmd);
-		ft_error(cmd[0], ": command not found", data);
+		ft_error(tmp_cmd, ": command not found", data);
 	}
 	if (execve(path, cmd, data->envp) == -1)
 		ft_error("Execve: ", strerror(errno), data);
 }
 
-//duplicates specified input and output to STDIN snd STDOUT FILENOs
-//called by each child process
-void dup_in_out(int input, int output, t_data *data)
-{
-	if (dup2(input, STDIN_FILENO) == -1)
-		ft_error("dup2", strerror(errno), data);
-	if (dup2(output, STDOUT_FILENO) == -1)
-		ft_error("dup2", strerror(errno), data);
-}
-
 /*
 sets input and output depending on if its the first, last or middle child
-if middle or last child, waits for the child processes before it to finish
-executes command
+if middle or last child, waits for the child processes to finish before
+executing command
 */
 void	child_process(t_data *d, int child_nb)
 {
@@ -92,27 +86,28 @@ void	child_process(t_data *d, int child_nb)
 	close(d->infile);
 	close(d->outfile);
 	close_pipes(d);
-	if (child_nb > 0)
-		waitpid(d->pids[child_nb - 1], NULL, 0);
+	//if (child_nb > 0)
+	//	waitpid(d->pids[child_nb - 1], NULL, 0); PROBELM HERE
 	ft_exec(d->av[child_nb + 2 + d->here_doc], d);
 }
 
-//waits for last child process to finish, and returns it's exit status
+//waits for last child process to finish, clears resources
+//returns exit status of last child
 int	parent_process(t_data *data, int last_child)
 {
 	int	wstatus;
 
-	waitpid(data->pids[last_child], &wstatus, 0);
+	waitpid(data->pids[last_child], &wstatus, 0); //MAYBE PROBLEM HERE
 	clear_resources(data);
 	if (WIFEXITED(wstatus))
 		return (WEXITSTATUS(wstatus));
 	return (1);
 }
 
-//check for correct argument format
-//initialise data (pipes, infile or heredoc, outfile and allocates for pids)
-//fork into multiple processes to execute commands; one child per command
-//clear any resources in parent process and return exit status of last child
+//Checks for correct argument format. Accepts multiple pipes and here_doc with limiter.
+//Initialises data (pipes, infile or heredoc, outfile and allocates for pids)
+//Forks into multiple processes to execute commands; one child per command
+//Clears any resources in parent process and returns exit status of last child
 int	main(int ac, char **av, char **envp)
 {
 	t_data	data;

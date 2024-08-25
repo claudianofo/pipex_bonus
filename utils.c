@@ -6,23 +6,35 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/17 16:17:53 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/25 19:00:21 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/25 20:10:14 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	free_array(char **array)
+//duplicates specified input and output to STDIN snd STDOUT FILENOs
+//called by each child process
+void dup_in_out(int input, int output, t_data *data)
 {
-	int	i;
+	if (dup2(input, STDIN_FILENO) == -1)
+		ft_error("dup2", strerror(errno), data);
+	if (dup2(output, STDOUT_FILENO) == -1)
+		ft_error("dup2", strerror(errno), data);
+}
 
-	i = 0;
-	while (array[i])
+//checks if enough args were passed
+//returns 1 if not enough args
+void	check_args(int ac, char **av)
+{
+	if (ac < 5 || (ac < 6 && ft_strncmp(av[1], "here_doc", 9) == 0))
 	{
-		free(array[i]);
-		i++;
+		if (ac >= 2 && ft_strncmp(av[1], "here_doc", 9) == 0)
+			ft_error("Not enough args, follow format:\n", 
+				"./pipex here_doc LIMITER cmd1 cmd2 ... cmdn outfile", NULL);
+		else
+			ft_error("Not enough args. Follow format:\n", 
+				"./pipex infile cmd1 cmd2 ... cmdn outfile", NULL);
 	}
-	free(array);
 }
 
 char	**ft_rm_quotes(char **cmd)
@@ -41,17 +53,15 @@ char	**ft_rm_quotes(char **cmd)
 	return (cmd);
 }
 
-//checks if enough args were passed
-//returns 1 if not enough args
-void	check_args(int ac, char **av)
+void	free_array(char **array)
 {
-	if (ac < 5 || (ac < 6 && ft_strncmp(av[1], "here_doc", 9) == 0))
+	int	i;
+
+	i = 0;
+	while (array[i])
 	{
-		if (ac >= 2 && ft_strncmp(av[1], "here_doc", 9) == 0)
-			ft_error("Not enough args, follow format:\n", 
-				"./pipex here_doc LIMITER cmd1 cmd2 ... cmdn outfile", NULL);
-		else
-			ft_error("Not enough args. Follow format:\n", 
-				"./pipex infile cmd1 cmd2 ... cmdn outfile", NULL);
+		free(array[i]);
+		i++;
 	}
+	free(array);
 }
