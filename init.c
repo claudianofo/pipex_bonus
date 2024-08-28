@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/08/13 19:45:10 by claudia           #+#    #+#             */
-/*   Updated: 2024/08/25 20:30:30 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/27 21:12:37 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ static void	set_infile(t_data *data)
 //Or in append mode if here_doc flag is true
 static void	set_outfile(t_data *d)
 {
+	printf("out = %s\n", d->av[d->ac - 1]);
 	if (d->here_doc == 1)
 		d->outfile = open(d->av[d->ac - 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
 	else
@@ -77,6 +78,12 @@ static void	create_pipes(t_data *data)
 	{
 		if (pipe(&data->pipes[i * 2]) == -1)
 			ft_error("Unable to create pipes:", strerror(errno), data);
+		i++;
+	}
+	i = 0;
+	while (i < (data->nb_cmds - 1) * 2)
+	{
+		printf("pipe[%d] = %d\n", i, data->pipes[i]);
 		i++;
 	}
 }

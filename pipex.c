@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/08/22 14:35:51 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/25 21:52:25 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/27 21:19:51 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,9 +53,9 @@ void	ft_exec(char *arg, t_data *data)
 	char	*path;
 	char	*tmp_cmd;
 
-	//printf("arg = %s\n", arg);
+	printf("arg = %s\n", arg);
 	cmd = split_pipex(arg);
-	//printf("cmd[0] = %s\n", cmd[0]);//WHAT IS GOING ON WITH THE OUTPUTS????
+	printf("cmd[0] = %s\n", cmd[0]);//WHAT IS GOING ON WITH THE OUTPUTS????
 	path = find_path(cmd[0], data->envp);
 	i = 0;
 	if (!path)
@@ -77,12 +77,22 @@ executing command
 */
 void	child_process(t_data *d, int child_nb)
 {
+	printf("infile = %d, outfile = %d\n", d->infile, d->outfile);
 	if (child_nb == 0)
+	{
+		printf("child_nb = %d, in = %d, out = %d\n", child_nb, d->infile, d->pipes[1]);
 		dup_in_out(d->infile, d->pipes[1], d);
+	}
 	else if (child_nb == d->nb_cmds - 1)
+	{
+		printf("child_nb = %d, in = %d, out = %d\n", child_nb, d->pipes[2 * child_nb - 2], d->outfile);
 		dup_in_out(d->pipes[2 * child_nb - 2], d->outfile, d);
+	}
 	else
+	{
+		printf("child_nb = %d, in = %d, out = %d\n", child_nb, d->pipes[2 * child_nb - 2], d->pipes[2 * child_nb + 1]);
 		dup_in_out(d->pipes[2 * child_nb - 2], d->pipes[2 * child_nb + 1], d);
+	}
 	close(d->infile);
 	close(d->outfile);
 	close_pipes(d);
@@ -112,6 +122,7 @@ int	main(int ac, char **av, char **envp)
 {
 	t_data	data;
 	int		child_nb;
+	int		res;
 
 	check_args(ac, av);
 	data = init_data(ac, av, envp);
@@ -125,5 +136,6 @@ int	main(int ac, char **av, char **envp)
 			child_process(&data, child_nb);
 		child_nb++;
 	}
-	return (parent_process(&data, child_nb - 1));
+	res = parent_process(&data, child_nb - 1);
+	return (res);
 }     

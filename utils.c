@@ -6,7 +6,7 @@
 /*   By: claudia <claudia@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/17 16:17:53 by cnorton-          #+#    #+#             */
-/*   Updated: 2024/08/25 20:10:14 by claudia          ###   ########.fr       */
+/*   Updated: 2024/08/27 21:13:48 by claudia          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,14 @@
 
 //duplicates specified input and output to STDIN snd STDOUT FILENOs
 //called by each child process
-void dup_in_out(int input, int output, t_data *data)
+void	dup_in_out(int input, int output, t_data *data)
 {
-	if (dup2(input, STDIN_FILENO) == -1)
+	if (output && dup2(input, STDIN_FILENO) == -1)
 		ft_error("dup2", strerror(errno), data);
-	if (dup2(output, STDOUT_FILENO) == -1)
+	write(1, "hellodup1\n", 10);
+	if (dup2(output, STDOUT_FILENO) == -1 && write(1, "hellodupp\n", 10) == 10)
 		ft_error("dup2", strerror(errno), data);
+	write(1, "hellodup2\n", 10);
 }
 
 //checks if enough args were passed
